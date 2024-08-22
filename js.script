@@ -1,0 +1,119 @@
+// script.js
+document.addEventListener('DOMContentLoaded', loadTasks);
+
+function addTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const description = document.getElementById('task-description').value.trim();
+    const dueDate = document.getElementById('task-due-date').value;
+    const priority = document.getElementById('task-priority').value;
+
+    if (title === '') {
+        alert('Task title is required.');
+        return;
+    }
+
+    const tasks = getTasks();
+    const task = {
+        id: Date.now(),
+        title,
+        description,
+        dueDate,
+        priority,
+        completed: false
+    };
+
+    tasks.push(task);
+    saveTasks(tasks);
+    renderTasks();
+    clearForm();
+}
+
+function editTask(id) {
+    const tasks = getTasks();
+    const task = tasks.find(t => t.id === id);
+    
+    document.getElementById('task-title').value = task.title;
+    document.getElementById('task-description').value = task.description;
+    document.getElementById('task-due-date').value = task.dueDate;
+    document.getElementById('task-priority').value = task.priority;
+    
+    document.getElementById('add-button').style.display = 'none';
+    document.getElementById('update-button').style.display = 'inline-block';
+    document.getElementById('update-button').onclick = () => {
+        updateTask(id);
+    };
+}
+
+function updateTask(id) {
+    const tasks = getTasks();
+    const task = tasks.find(t => t.id === id);
+    
+    task.title = document.getElementById('task-title').value.trim();
+    task.description = document.getElementById('task-description').value.trim();
+    task.dueDate = document.getElementById('task-due-date').value;
+    task.priority = document.getElementById('task-priority').value;
+    
+    saveTasks(tasks);
+    renderTasks();
+    clearForm();
+    
+    document.getElementById('add-button').style.display = 'inline-block';
+    document.getElementById('update-button').style.display = 'none';
+}
+
+function deleteTask(id) {
+    const tasks = getTasks().filter(task => task.id !== id);
+    saveTasks(tasks);
+    renderTasks();
+}
+
+function toggleCompletion(id) {
+    const tasks = getTasks();
+    const task = tasks.find(t => t.id === id);
+    task.completed = !task.completed;
+    saveTasks(tasks);
+    renderTasks();
+}
+
+function getTasks() {
+    const tasks = localStorage.getItem('tasks');
+    return tasks ? JSON.parse(tasks) : [];
+}
+
+function saveTasks(tasks) {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function renderTasks() {
+    const tasks = getTasks();
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = '';
+    
+    tasks.forEach(task => {
+        const taskItem = document.createElement('li');
+        taskItem.className = task.completed ? 'completed' : '';
+        taskItem.innerHTML = `
+            <div>
+                <strong>${task.title}</strong>
+                <p>${task.description}</p>
+                <p>Due: ${task.dueDate}</p>
+                <p>Priority: ${task.priority}</p>
+            </div>
+            <div class="task-actions">
+                <button class="edit" onclick="editTask(${task.id})">Edit</button>
+                <button class="delete" onclick="deleteTask(${task.id})">Delete</button>
+                <button onclick="toggleCompletion(${task.id})">
+                    ${task.completed ? 'Mark as Incomplete' : 'Mark as Completed'}
+                </button>
+            </div>
+        `;
+        taskList.appendChild(taskItem);
+    });
+}
+
+function clearForm() {
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-description').value = '';
+    document.getElementById('task-due-date').value = '';
+    document.getElementById('task-priority').value = 'low';
+}
